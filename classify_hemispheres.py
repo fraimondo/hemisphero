@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from matplotlib import rcParams
 import matplotlib.pyplot as plt
 
 from sklearn.svm import SVC
@@ -7,6 +8,12 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import roc_auc_score
+
+rcParams['font.family'] = 'sans-serif'
+rcParams['font.sans-serif'] = ['Calibri']
+rcParams['xtick.labelsize'] = 12
+rcParams['ytick.labelsize'] = 12
+rcParams['legend.fontsize'] = 12
 
 df = pd.read_csv('./BrainValues_HemisphDOC_MA.txt', sep=',',
                  header=None, 
@@ -19,8 +26,8 @@ df['DOC'] = [_codes[x] for x in df['Code'].values]
 
 
 features = {
-    'Right Hemisphere': ['RH_Occ', 'RH_Temp'],
-    'Left Hemisphere': ['LH_Occ', 'LC_Temp']}
+    'Right hemisphere': ['RH_Occ', 'RH_Temp'],
+    'Left hemisphere': ['LH_Occ', 'LC_Temp']}
 
 df_train = df[df['DOC'].isin(['MCS', 'UWS'])]
 df_test = df[~df['DOC'].isin(['MCS', 'UWS'])]
@@ -32,6 +39,10 @@ clf = Pipeline([
 ])
 
 fig, axes = plt.subplots(1, len(features), figsize=(14, 6))
+
+uws_color = '#a30234'
+mcs_color = '#0076c0'
+patient_color = '#677719'
 
 for t_ax, (t_h, t_features) in zip(axes, features.items()):
     print(f'Using only {t_h}')
@@ -48,13 +59,13 @@ for t_ax, (t_h, t_features) in zip(axes, features.items()):
 
     print(f'Prob {t_h} MCS Pat 1: {probas[0, 1]}')
 
-    t_ax.scatter(X_train[y_train == 0, 0], X_train[y_train == 0, 1], c='r', 
-                 alpha=0.8, label='Patients in VS/UWS')
-    t_ax.scatter(X_train[y_train == 1, 0], X_train[y_train == 1, 1], c='b', 
-                 alpha=0.8, label='Patients in MCS')
-    t_ax.scatter(X_test[y_test == 2, 0], X_test[y_test == 2, 1], c='g', 
-                 alpha=0.8, label='Patient MA')
-    if t_h == 'Left Hemisphere':
+    t_ax.scatter(X_train[y_train == 0, 0], X_train[y_train == 0, 1],
+                 c=uws_color, alpha=1, label='Patients in VS/UWS')
+    t_ax.scatter(X_train[y_train == 1, 0], X_train[y_train == 1, 1],
+                 c=mcs_color, alpha=1, label='Patients in MCS')
+    t_ax.scatter(X_test[y_test == 2, 0], X_test[y_test == 2, 1],
+                 c=patient_color, alpha=1, label='Patient MA')
+    if t_h == 'Left hemisphere':
         t_ax.legend()
      
     xlim = t_ax.get_xlim()
@@ -67,6 +78,6 @@ for t_ax, (t_h, t_features) in zip(axes, features.items()):
     Z = clf.decision_function(xy).reshape(XX.shape)
     a = t_ax.contour(XX, YY, Z, colors='k', levels=[0], alpha=0.5, 
                      linestyles=['-'])
-    t_ax.set_title(t_h)
+    t_ax.set_title(t_h, fontdict={'fontweight': 800, 'fontsize': 18})
     
 fig.savefig('fig_clf.pdf')
